@@ -3,713 +3,364 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Mediterranean Batch-Prep Plan</title>
+    <title>Mediterranean Batch-Prep Plan</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #f8fafc;
-            color: #334155;
-        }
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 350px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 250px;
-            max-height: 300px;
-        }
-        @media (min-width: 768px) {
-            .chart-container {
-                height: 300px;
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            base: '#f8fafc',
+                            dark: '#334155',
+                            teal: '#0d9488',
+                            tealhover: '#0f766e',
+                            amber: '#d97706',
+                            slate: '#64748b'
+                        }
+                    }
+                }
             }
         }
-        .nav-btn.active {
-            background-color: #0d9488; /* Tailwind Teal 600 */
-            color: #ffffff;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-        .meal-btn.active {
-            background-color: #f1f5f9;
-            border-left-width: 4px;
-            border-left-color: #0d9488;
-            font-weight: 600;
-        }
-        .prep-item {
-            transition: all 0.2s ease;
-        }
-        .prep-item.completed {
-            opacity: 0.4;
-            text-decoration: line-through;
-            background-color: #f8fafc;
-        }
-        .grocery-item {
-            transition: all 0.2s ease;
-        }
-        .grocery-item.checked {
-            opacity: 0.4;
-            text-decoration: line-through;
-            background-color: #f8fafc;
-        }
-        .fade-in {
-            animation: fadeIn 0.4s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    </script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .completed { text-decoration: line-through; opacity: 0.5; transition: all 0.2s; }
+        .tab-btn.active { background-color: #0d9488; color: white; border-color: #0d9488; }
+        .meal-btn.active { background-color: #f1f5f9; border-left: 4px solid #0d9488; }
+        /* Custom scrollbar for sidebar */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
-<body class="antialiased min-h-screen flex flex-col">
+<body class="bg-slate-50 text-brand-dark font-sans antialiased min-h-screen flex flex-col">
 
-    <!-- Chosen Palette: Clean slate grays (#f8fafc to #334155) for base readability, Mediterranean Teal (#0d9488) for primary branding/actions, and warm Amber/Olive accents for food vitality. -->
-    <!-- Application Structure Plan: The SPA uses a 4-tab layout optimized for a general audience. 
-         1) "The Strategy" introduces the core philosophy (protein focus, 6 PM snack, batch prep) so anyone can grasp the 'why' behind the plan.
-         2) "Meal Library" acts as a digital cookbook and macro calculator, allowing users to browse recipes by time of day and visualize nutritional balance.
-         3) "Sunday Protocol" converts static prep instructions into an actionable, cross-off checklist to guide users through their 2-hour weekend cooking session.
-         4) "Grocery List" provides a categorized shopping list of all ingredients from the Meal Library for easy shopping prep. -->
-    <!-- Visualization & Content Choices: 
-         - Core Principles -> The Strategy Tab -> HTML/CSS Icon Cards -> Interaction: Hover lifts -> Justification: Breaks down the methodology into easily digestible rules.
-         - Macronutrient Breakdowns -> Meal Library -> Chart.js Doughnut Charts -> Interaction: Hover tooltips -> Justification: Visually proves the "high protein, balanced fat/carb" promise of each meal without overwhelming the user with raw numbers.
-         - Prep Steps -> Sunday Protocol -> HTML Checkboxes + JS logic -> Interaction: Click to strike-through -> Justification: Transforms a static reading experience into a practical kitchen tool.
-         - Grocery List -> Grocery List Tab -> HTML Checkboxes + JS logic -> Interaction: Click to strike-through -> Justification: Practical shopping companion.
-         - Library/Method: Vanilla JS for routing and state, Chart.js (Canvas) for macros, Tailwind for responsive layout. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. Relying strictly on Unicode emojis, Tailwind styling, and Chart.js Canvas. -->
-
-    <!-- Navigation -->
-    <nav class="bg-white shadow-sm sticky top-0 z-20 border-b border-slate-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col sm:flex-row justify-between items-center h-auto sm:h-16 py-3 sm:py-0">
-                <div class="flex items-center space-x-2 mb-3 sm:mb-0">
-                    <span class="text-2xl">🌿</span>
-                    <span class="font-bold text-xl text-slate-800 tracking-tight">The <span class="text-teal-600">Medi</span>Prep Plan</span>
-                </div>
-                <div class="flex items-center space-x-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 hide-scrollbar justify-start sm:justify-center px-1">
-                    <button onclick="app.switchTab('strategy')" id="tab-strategy" class="nav-btn active px-4 py-2 rounded-full text-sm font-medium text-slate-600 hover:bg-teal-50 transition-all whitespace-nowrap">The Strategy</button>
-                    <button onclick="app.switchTab('library')" id="tab-library" class="nav-btn px-4 py-2 rounded-full text-sm font-medium text-slate-600 hover:bg-teal-50 transition-all whitespace-nowrap">Meal Library</button>
-                    <button onclick="app.switchTab('protocol')" id="tab-protocol" class="nav-btn px-4 py-2 rounded-full text-sm font-medium text-slate-600 hover:bg-teal-50 transition-all whitespace-nowrap">Sunday Protocol</button>
-                    <button onclick="app.switchTab('grocery')" id="tab-grocery" class="nav-btn px-4 py-2 rounded-full text-sm font-medium text-slate-600 hover:bg-teal-50 transition-all whitespace-nowrap">Grocery List</button>
-                </div>
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-6">
+            <div class="flex items-center gap-3 mb-2">
+                <span class="text-3xl">🌿</span>
+                <h1 class="text-2xl md:text-3xl font-bold text-slate-800">The Mediterranean Batch-Prep</h1>
             </div>
+            <p class="text-slate-500">Fat loss & muscle preservation for busy professionals.</p>
+            
+            <!-- Navigation -->
+            <nav class="flex overflow-x-auto gap-2 mt-6 pb-2 custom-scroll">
+                <button onclick="app.switchTab('strategy')" id="tab-strategy" class="tab-btn active whitespace-nowrap px-5 py-2.5 rounded-full border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors">🎯 Strategy</button>
+                <button onclick="app.switchTab('library')" id="tab-library" class="tab-btn whitespace-nowrap px-5 py-2.5 rounded-full border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors">🍽️ Meal Library</button>
+                <button onclick="app.switchTab('protocol')" id="tab-protocol" class="tab-btn whitespace-nowrap px-5 py-2.5 rounded-full border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors">⏱️ Sunday Protocol</button>
+                <button onclick="app.switchTab('grocery')" id="tab-grocery" class="tab-btn whitespace-nowrap px-5 py-2.5 rounded-full border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors">🛒 Grocery List</button>
+            </nav>
         </div>
-    </nav>
+    </header>
 
-    <!-- Main Content Area -->
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-
-        <!-- TAB 1: The Strategy -->
-        <div id="view-strategy" class="block space-y-8 fade-in">
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-8 opacity-10 text-8xl pointer-events-none">🍋</div>
-                <div class="relative z-10 max-w-3xl">
-                    <h1 class="text-3xl md:text-4xl font-bold text-slate-800 mb-4">A sustainable approach to fat loss.</h1>
-                    <p class="text-slate-600 text-lg leading-relaxed">
-                        This plan is designed for busy professionals who want to drop body fat and preserve muscle, but don't have the time to cook every single meal. By combining the heart-healthy principles of the Mediterranean diet with a strategic batch-prep routine, you can eat beautifully without the daily stress.
-                    </p>
-                </div>
+    <!-- Main Content -->
+    <main class="flex-grow max-w-6xl mx-auto w-full px-4 py-8">
+        
+        <!-- 1. STRATEGY TAB -->
+        <section id="strategy" class="tab-content fade-in">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold mb-2">The Philosophy</h2>
+                <p class="text-slate-600">A practical approach combining heart-healthy Mediterranean principles with high-protein adherence.</p>
             </div>
-
-            <h2 class="text-2xl font-bold text-slate-800 px-2 mt-10 mb-4">The Core Pillars</h2>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Pillar 1 -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
-                    <div class="h-12 w-12 bg-teal-100 text-teal-600 rounded-xl flex items-center justify-center text-2xl mb-4">🥩</div>
-                    <h3 class="font-bold text-lg text-slate-800 mb-2">High Protein Focus</h3>
-                    <p class="text-slate-600 text-sm leading-relaxed">
-                        To preserve muscle mass while in a calorie deficit, every meal is anchored by a strong protein source—ranging from Skyr and eggs to lean turkey, salmon, and plant-based legumes.
-                    </p>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                    <div class="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center text-2xl mb-4">🥩</div>
+                    <h3 class="text-xl font-bold mb-3">High Protein Focus</h3>
+                    <p class="text-slate-600">Every meal is anchored by strong protein sources (110g - 130g daily) to preserve muscle mass while maintaining a caloric deficit for fat loss.</p>
                 </div>
-
-                <!-- Pillar 2 -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
-                    <div class="h-12 w-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center text-2xl mb-4">⏱️</div>
-                    <h3 class="font-bold text-lg text-slate-800 mb-2">The 6:00 PM Hunger Buster</h3>
-                    <p class="text-slate-600 text-sm leading-relaxed">
-                        The post-work hunger spike is where most diets fail. We actively combat this by scheduling a mandatory, high-protein snack right as the workday ends to stabilize blood sugar before dinner.
-                    </p>
+                
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                    <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center text-2xl mb-4">⏰</div>
+                    <h3 class="text-xl font-bold mb-3">6 PM Hunger Buster</h3>
+                    <p class="text-slate-600">A mandatory post-work snack window. We eat a targeted snack immediately after work to stabilize blood sugar and prevent overeating at dinner.</p>
                 </div>
-
-                <!-- Pillar 3 -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
-                    <div class="h-12 w-12 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center text-2xl mb-4">🥗</div>
-                    <h3 class="font-bold text-lg text-slate-800 mb-2">Vegetarian Workdays</h3>
-                    <p class="text-slate-600 text-sm leading-relaxed">
-                        To boost fiber intake and ensure lunches are easy to pack and store safely at the office, all weekday lunches are 100% vegetarian, relying on robust ingredients like quinoa and chickpeas.
-                    </p>
+                
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-2xl mb-4">🥗</div>
+                    <h3 class="text-xl font-bold mb-3">Vegetarian Workdays</h3>
+                    <p class="text-slate-600">Office lunches are 100% vegetarian. High in fiber, easy to digest, and perfectly safe to batch-prep and store for 3-4 days in Tupperware.</p>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- TAB 2: Meal Library -->
-        <div id="view-library" class="hidden space-y-6 fade-in">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <h2 class="text-2xl font-bold text-slate-800 mb-2">Interactive Meal Library</h2>
-                <p class="text-slate-600">
-                    Browse the menu below. Select any meal to reveal its preparation instructions and view a detailed macronutrient breakdown to ensure you are hitting your dietary targets.
-                </p>
-            </div>
-
-            <div class="flex flex-col lg:flex-row gap-6">
+        <!-- 2. MEAL LIBRARY TAB -->
+        <section id="library" class="tab-content hidden fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- Sidebar Menu -->
-                <div class="w-full lg:w-1/3 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden max-h-80 lg:max-h-none lg:h-[600px] overflow-y-auto hide-scrollbar">
-                    <div id="meal-list-container" class="flex flex-col pb-4">
+                <div class="lg:col-span-1 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden h-[calc(100vh-250px)] flex flex-col">
+                    <div class="p-4 bg-slate-50 border-b border-slate-200">
+                        <h3 class="font-bold text-slate-800">Menu Directory</h3>
+                    </div>
+                    <div class="overflow-y-auto custom-scroll p-2 flex-grow" id="meal-list-container">
                         <!-- Populated by JS -->
                     </div>
                 </div>
-
-                <!-- Detail Panel -->
-                <div id="detail-panel-container" class="w-full lg:w-2/3 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 flex flex-col min-h-[400px] lg:min-h-[600px] scroll-mt-20">
-                    
-                    <!-- Empty State -->
-                    <div id="meal-detail-empty" class="flex-grow flex flex-col items-center justify-center text-slate-400 py-10">
-                        <span class="text-6xl mb-4">🍽️</span>
-                        <p class="text-lg">Select a meal from the library to view details</p>
-                    </div>
-                    
-                    <!-- Content State -->
-                    <div id="meal-detail-content" class="hidden flex-col h-full fade-in">
-                        <div class="border-b border-slate-100 pb-4 mb-6">
-                            <span id="detail-category" class="text-xs font-bold uppercase tracking-wider text-teal-600 bg-teal-50 px-3 py-1 rounded-full"></span>
-                            <h3 id="detail-title" class="text-3xl font-bold text-slate-800 mt-4 mb-1"></h3>
-                        </div>
-                        
-                        <div class="mb-8 bg-slate-50 p-5 rounded-xl border border-slate-200">
-                            <h4 class="text-sm font-bold text-slate-700 mb-2 flex items-center"><span class="mr-2">🧑‍🍳</span> Preparation & Ingredients</h4>
-                            <p id="detail-desc" class="text-slate-600 leading-relaxed"></p>
-                        </div>
-
-                        <div class="flex-grow flex flex-col md:flex-row items-center justify-between gap-8 bg-white p-4">
-                            <div class="w-full md:w-1/2">
-                                <h4 class="text-sm font-bold text-slate-700 mb-4 flex items-center"><span class="mr-2">📊</span> Nutritional Profile</h4>
-                                <div id="macro-text-container" class="space-y-3">
-                                    <!-- Populated by JS -->
-                                </div>
-                            </div>
-                            <div class="w-full md:w-1/2 flex justify-center items-center">
-                                <div class="chart-container">
-                                    <canvas id="macroChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
+                
+                <!-- Detailed View -->
+                <div class="lg:col-span-2" id="meal-detail-container">
+                    <!-- Default State -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center h-full flex flex-col items-center justify-center text-slate-400">
+                        <span class="text-6xl mb-4">👈</span>
+                        <h3 class="text-xl font-medium text-slate-600">Select a meal from the directory</h3>
+                        <p>View detailed instructions and macro breakdowns.</p>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- TAB 3: Sunday Protocol -->
-        <div id="view-protocol" class="hidden space-y-6 fade-in">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <h2 class="text-2xl font-bold text-slate-800 mb-2">The 2-Hour Sunday Prep Protocol</h2>
-                <p class="text-slate-600">
-                    The secret to this diet is execution. Run these three phases concurrently on a Sunday afternoon to prepare all your weekday lunches, breakfasts, and dinner components. Use the checklist as you cook.
-                </p>
+        <!-- 3. SUNDAY PROTOCOL TAB -->
+        <section id="protocol" class="tab-content hidden fade-in">
+            <div class="mb-8 flex justify-between items-end flex-wrap gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold mb-2">The 2-Hour Sunday Prep</h2>
+                    <p class="text-slate-600">Run these three phases concurrently for maximum efficiency.</p>
+                </div>
+                <button onclick="app.resetProtocol()" class="text-sm px-4 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors">
+                    Reset Checked Items
+                </button>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Column 1: Oven -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="bg-rose-50 px-6 py-4 border-b border-rose-100 flex items-center justify-between">
-                        <h3 class="font-bold text-rose-900 text-lg flex items-center"><span class="mr-2">🔥</span> Phase 1: The Oven</h3>
-                        <span class="text-rose-700 font-mono text-xs bg-rose-100 px-2 py-1 rounded-md font-bold">200°C</span>
+                <div class="bg-white rounded-2xl shadow-sm border border-rose-100 overflow-hidden">
+                    <div class="bg-rose-50 p-4 border-b border-rose-100 flex items-center gap-2">
+                        <span class="text-xl">🔥</span>
+                        <h3 class="font-bold text-rose-800">Phase 1: The Oven</h3>
                     </div>
-                    <div class="p-4 space-y-2">
-                        <label class="prep-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-rose-600 rounded border-slate-300 focus:ring-rose-500 transition-colors" onclick="app.toggleStrike(this)">
-                            <span class="text-slate-600 text-sm leading-snug"><strong class="text-slate-800">The Roasting Veggies:</strong> Chop a massive batch of zucchini, bell peppers, red onions, and eggplant. Toss with olive oil and oregano. Put on the bottom rack for 30 minutes.</span>
+                    <div class="p-4 space-y-3">
+                        <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
+                            <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
+                            <span class="text-slate-700">Preheat oven to 200°C (400°F).</span>
                         </label>
-                        <label class="prep-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-rose-600 rounded border-slate-300 focus:ring-rose-500 transition-colors" onclick="app.toggleStrike(this)">
-                            <span class="text-slate-600 text-sm leading-snug"><strong class="text-slate-800">The Turkey Meatballs:</strong> Mix ground turkey with very finely chopped spinach, garlic, and salt. Roll into balls and bake on the top rack for 18-20 minutes.</span>
+                        <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
+                            <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
+                            <span class="text-slate-700">Mix Turkey Meatballs. Place on a lined baking sheet.</span>
                         </label>
-                        <label class="prep-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-rose-600 rounded border-slate-300 focus:ring-rose-500 transition-colors" onclick="app.toggleStrike(this)">
-                            <span class="text-slate-600 text-sm leading-snug"><strong class="text-slate-800">The Egg Muffins:</strong> Lower the oven heat to 180°C after the meat comes out, and bake the egg/feta mixture in a tin for 20 minutes.</span>
+                        <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
+                            <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
+                            <span class="text-slate-700">Whisk Egg Muffins mixture. Pour into greased tin.</span>
                         </label>
-                    </div>
-                </div>
-
-                <!-- Column 2: Stove -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="bg-amber-50 px-6 py-4 border-b border-amber-100 flex items-center justify-between">
-                        <h3 class="font-bold text-amber-900 text-lg flex items-center"><span class="mr-2">♨️</span> Phase 2: The Stove</h3>
-                    </div>
-                    <div class="p-4 space-y-2">
-                        <label class="prep-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-amber-500 rounded border-slate-300 focus:ring-amber-500 transition-colors" onclick="app.toggleStrike(this)">
-                            <span class="text-slate-600 text-sm leading-snug"><strong class="text-slate-800">Boil Quinoa:</strong> Cook enough quinoa for the first three days of lunches. Set aside to cool.</span>
-                        </label>
-                        <label class="prep-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-amber-500 rounded border-slate-300 focus:ring-amber-500 transition-colors" onclick="app.toggleStrike(this)">
-                            <span class="text-slate-600 text-sm leading-snug"><strong class="text-slate-800">Simmer Soup:</strong> Get a large pot simmering with diced carrots, celery, onions, canned tomatoes, broth, and dry brown lentils. Cook for 40 minutes.</span>
-                        </label>
-                        <label class="prep-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-amber-500 rounded border-slate-300 focus:ring-amber-500 transition-colors" onclick="app.toggleStrike(this)">
-                            <span class="text-slate-600 text-sm leading-snug"><strong class="text-slate-800">Sear Halloumi:</strong> Slice your Halloumi block and pan-fry the slices for 2 minutes per side until golden. Set aside.</span>
+                        <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
+                            <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
+                            <span class="text-slate-700">Bake Meatballs and Muffins together for 20 mins.</span>
                         </label>
                     </div>
                 </div>
 
-                <!-- Column 3: Assemble -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="bg-teal-50 px-6 py-4 border-b border-teal-100 flex items-center justify-between">
-                        <h3 class="font-bold text-teal-900 text-lg flex items-center"><span class="mr-2">🍱</span> Phase 3: Assemble</h3>
+                <!-- Column 2: Stove & Chop -->
+                <div class="bg-white rounded-2xl shadow-sm border border-amber-100 overflow-hidden">
+                    <div class="bg-amber-50 p-4 border-b border-amber-100 flex items-center gap-2">
+                        <span class="text-xl">🔪</span>
+                        <h3 class="font-bold text-amber-800">Phase 2: Stove & Chop</h3>
                     </div>
-                    <div class="p-4 space-y-2">
-                        <label class="prep-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-teal-600 rounded border-slate-300 focus:ring-teal-500 transition-colors" onclick="app.toggleStrike(this)">
-                            <span class="text-slate-600 text-sm leading-snug"><strong class="text-slate-800">Chop Fresh Produce:</strong> Dice raw cucumbers, cherry tomatoes, and fresh parsley for salads.</span>
+                    <div class="p-4 space-y-3">
+                        <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
+                            <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
+                            <span class="text-slate-700">Start Quinoa on the stove (15 mins simmer).</span>
                         </label>
-                        <label class="prep-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-teal-600 rounded border-slate-300 focus:ring-teal-500 transition-colors" onclick="app.toggleStrike(this)">
-                            <span class="text-slate-600 text-sm leading-snug"><strong class="text-slate-800">Portion Tabbouleh:</strong> Mix cooked quinoa with raw veggies, chickpeas, and feta. Portion into 3 lunchboxes (Mon/Tue/Wed).</span>
+                        <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
+                            <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
+                            <span class="text-slate-700">Dice onions, cucumbers, tomatoes, and bell peppers.</span>
                         </label>
-                        <label class="prep-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-teal-600 rounded border-slate-300 focus:ring-teal-500 transition-colors" onclick="app.toggleStrike(this)">
-                            <span class="text-slate-600 text-sm leading-snug"><strong class="text-slate-800">Pack Lentil Bowls:</strong> Add sturdy greens, cooked lentils, roasted vegetables, and seared Halloumi into 2 lunchboxes (Thu/Fri). Dressing on the side.</span>
-                        </label>
-                        <label class="prep-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-teal-600 rounded border-slate-300 focus:ring-teal-500 transition-colors" onclick="app.toggleStrike(this)">
-                            <span class="text-slate-600 text-sm leading-snug"><strong class="text-slate-800">Store Proteins:</strong> Place cooled meatballs and soup into large airtight containers in the fridge.</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 4: Grocery List -->
-        <div id="view-grocery" class="hidden space-y-6 fade-in">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <h2 class="text-2xl font-bold text-slate-800 mb-2">Complete Grocery List</h2>
-                <p class="text-slate-600">
-                    All ingredients from the Meal Library organized by category. Check off items as you shop to make your grocery run efficient and stress-free.
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Proteins -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="bg-teal-50 px-6 py-4 border-b border-teal-100">
-                        <h3 class="font-bold text-teal-900 text-lg flex items-center"><span class="mr-2">🥩</span> Proteins</h3>
-                    </div>
-                    <div class="p-4 space-y-2">
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-teal-600 rounded border-slate-300 focus:ring-teal-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Ground turkey (lean)</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-teal-600 rounded border-slate-300 focus:ring-teal-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Fresh salmon fillets</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-teal-600 rounded border-slate-300 focus:ring-teal-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Chicken breast</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-teal-600 rounded border-slate-300 focus:ring-teal-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Canned tuna</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-teal-600 rounded border-slate-300 focus:ring-teal-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Eggs (large, 1 dozen+)</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-teal-600 rounded border-slate-300 focus:ring-teal-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Protein powder (whey or plant-based)</span>
+                        <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
+                            <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
+                            <span class="text-slate-700">Store chopped raw veggies in airtight containers.</span>
                         </label>
                     </div>
                 </div>
 
-                <!-- Dairy & Cheese -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="bg-amber-50 px-6 py-4 border-b border-amber-100">
-                        <h3 class="font-bold text-amber-900 text-lg flex items-center"><span class="mr-2">🧀</span> Dairy & Cheese</h3>
+                <!-- Column 3: Assembly -->
+                <div class="bg-white rounded-2xl shadow-sm border border-teal-100 overflow-hidden">
+                    <div class="bg-teal-50 p-4 border-b border-teal-100 flex items-center gap-2">
+                        <span class="text-xl">🍱</span>
+                        <h3 class="font-bold text-teal-800">Phase 3: Assembly</h3>
                     </div>
-                    <div class="p-4 space-y-2">
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-amber-600 rounded border-slate-300 focus:ring-amber-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Icelandic Skyr (plain, 400g+)</span>
+                    <div class="p-4 space-y-3">
+                        <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
+                            <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
+                            <span class="text-slate-700">Mix cooked Quinoa with chickpeas & veg for Tabbouleh.</span>
                         </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-amber-600 rounded border-slate-300 focus:ring-amber-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Greek yogurt (plain)</span>
+                        <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
+                            <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
+                            <span class="text-slate-700">Portion Tabbouleh into 3 lunch containers.</span>
                         </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-amber-600 rounded border-slate-300 focus:ring-amber-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Feta cheese (crumbled or block)</span>
+                        <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
+                            <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
+                            <span class="text-slate-700">Prepare Overnight Oats jars and place in fridge.</span>
                         </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-amber-600 rounded border-slate-300 focus:ring-amber-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Halloumi cheese (block)</span>
+                        <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
+                            <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
+                            <span class="text-slate-700">Store cooled Meatballs and Muffins in Tupperware.</span>
                         </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-amber-600 rounded border-slate-300 focus:ring-amber-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Tzatziki sauce</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-amber-600 rounded border-slate-300 focus:ring-amber-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Unsweetened almond milk</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Vegetables -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="bg-emerald-50 px-6 py-4 border-b border-emerald-100">
-                        <h3 class="font-bold text-emerald-900 text-lg flex items-center"><span class="mr-2">🥬</span> Vegetables</h3>
-                    </div>
-                    <div class="p-4 space-y-2">
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Fresh spinach (large bag)</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Mixed salad greens / cabbage</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Zucchini (3-4)</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Bell peppers (3-4, mixed colors)</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Red onions (2-3)</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Eggplant (1-2)</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Cherry tomatoes (2 containers)</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Large tomatoes (for cooking)</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Cucumbers (2-3)</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Asparagus (1 bunch)</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Sweet potatoes (2-3)</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Carrots (for soup)</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Celery (for soup)</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Fresh garlic (1 bulb)</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Legumes & Grains -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="bg-rose-50 px-6 py-4 border-b border-rose-100">
-                        <h3 class="font-bold text-rose-900 text-lg flex items-center"><span class="mr-2">🌾</span> Legumes & Grains</h3>
-                    </div>
-                    <div class="p-4 space-y-2">
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-rose-600 rounded border-slate-300 focus:ring-rose-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Quinoa (dry, 500g)</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-rose-600 rounded border-slate-300 focus:ring-rose-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Rolled oats</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-rose-600 rounded border-slate-300 focus:ring-rose-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Brown lentils (dry)</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-rose-600 rounded border-slate-300 focus:ring-rose-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Chickpeas (canned, 2-3 cans)</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-rose-600 rounded border-slate-300 focus:ring-rose-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Whole-wheat pita bread</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Frozen & Snacks -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="bg-blue-50 px-6 py-4 border-b border-blue-100">
-                        <h3 class="font-bold text-blue-900 text-lg flex items-center"><span class="mr-2">🫛</span> Frozen & Snacks</h3>
-                    </div>
-                    <div class="p-4 space-y-2">
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Frozen edamame (in pods)</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Mixed berries (fresh or frozen)</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Raw almonds</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Walnuts</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Pantry & Oils -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="bg-purple-50 px-6 py-4 border-b border-purple-100">
-                        <h3 class="font-bold text-purple-900 text-lg flex items-center"><span class="mr-2">🫒</span> Pantry & Oils</h3>
-                    </div>
-                    <div class="p-4 space-y-2">
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-purple-600 rounded border-slate-300 focus:ring-purple-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Extra virgin olive oil</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-purple-600 rounded border-slate-300 focus:ring-purple-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Lemons (3-4)</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-purple-600 rounded border-slate-300 focus:ring-purple-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Kalamata olives</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-purple-600 rounded border-slate-300 focus:ring-purple-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Canned tomatoes (diced)</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-purple-600 rounded border-slate-300 focus:ring-purple-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Vegetable or chicken broth</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-purple-600 rounded border-slate-300 focus:ring-purple-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Chia seeds</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Herbs & Spices -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="bg-lime-50 px-6 py-4 border-b border-lime-100">
-                        <h3 class="font-bold text-lime-900 text-lg flex items-center"><span class="mr-2">🌿</span> Herbs & Spices</h3>
-                    </div>
-                    <div class="p-4 space-y-2">
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-lime-600 rounded border-slate-300 focus:ring-lime-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Fresh parsley</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-lime-600 rounded border-slate-300 focus:ring-lime-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Fresh dill</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-lime-600 rounded border-slate-300 focus:ring-lime-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Dried oregano</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-lime-600 rounded border-slate-300 focus:ring-lime-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Smoked paprika</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-lime-600 rounded border-slate-300 focus:ring-lime-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Ground cumin</span>
-                        </label>
-                        <label class="grocery-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
-                            <input type="checkbox" class="mt-1 w-5 h-5 text-lime-600 rounded border-slate-300 focus:ring-lime-500" onclick="app.toggleGrocery(this)">
-                            <span class="text-slate-700 text-sm">Salt & pepper</span>
-                        </label>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="bg-teal-50 p-6 rounded-2xl border border-teal-100">
-                <div class="flex items-start space-x-3">
-                    <span class="text-2xl">💡</span>
-                    <div>
-                        <h4 class="font-bold text-teal-900 mb-2">Shopping Tips</h4>
-                        <ul class="text-teal-800 text-sm space-y-1 leading-relaxed">
-                            <li>• Buy vegetables in bulk for the Sunday prep session</li>
-                            <li>• Choose pre-washed spinach and salad greens to save time</li>
-                            <li>• Stock up on pantry staples (olive oil, spices) to last multiple weeks</li>
-                            <li>• Consider meal quantities when shopping - this list serves 1 week for 1 person</li>
-                        </ul>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
+
+        <!-- 4. GROCERY LIST TAB -->
+        <section id="grocery" class="tab-content hidden fade-in">
+            <div class="mb-8 flex justify-between items-end flex-wrap gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold mb-2">Master Grocery List</h2>
+                    <p class="text-slate-600">Everything needed to execute the meal library recipes.</p>
+                </div>
+                <button onclick="app.resetGroceries()" class="text-sm px-4 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors">
+                    Reset Checked Items
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="grocery-container">
+                <!-- Populated by JS -->
+            </div>
+            
+            <!-- Shopping Tips -->
+            <div class="mt-8 bg-blue-50 border border-blue-100 rounded-2xl p-6">
+                <h3 class="font-bold text-blue-800 mb-2 flex items-center gap-2">💡 Pro Shopping Tips</h3>
+                <ul class="list-disc list-inside text-slate-700 space-y-1 text-sm">
+                    <li>Buy edamame and berries frozen to save money and prevent spoilage.</li>
+                    <li>Check your pantry for olive oil and spices before buying more.</li>
+                    <li>Opt for 0% or 2% plain Greek yogurt/Skyr to control added sugars.</li>
+                </ul>
+            </div>
+        </section>
 
     </main>
 
+    <!-- Data and Logic -->
     <script>
-        // Database of meals extracted and generalized from the source report
         const appData = {
+            categories: [
+                { id: 'breakfast', title: 'Breakfast Options (Prep-Ahead)' },
+                { id: 'lunch', title: 'Vegetarian Lunches' },
+                { id: 'snack', title: '6 PM Hunger Busters' },
+                { id: 'dinner', title: 'Weeknight Dinners' },
+                { id: 'flex', title: 'Weekend Flex Options' }
+            ],
             meals: [
+                // Breakfast
                 {
-                    id: 'b1',
-                    category: 'Breakfast',
+                    id: 'b1', catId: 'breakfast', icon: '🥣',
                     title: 'Overnight Protein Oats',
-                    desc: 'Mix 50g rolled oats, 1 scoop vanilla protein powder, 1 tbsp chia seeds, and 120ml unsweetened almond milk in a jar. Leave in the fridge overnight. Top with berries in the morning.',
-                    calories: 380,
-                    protein: 30,
-                    fat: 9,
-                    carbs: 45,
-                    hasFullMacros: true,
-                    icon: '🥣'
+                    desc: 'Mix 50g rolled oats, 1 scoop vanilla protein, 1 tbsp chia seeds, and 120ml almond milk. Refrigerate overnight. Top with berries.',
+                    hasMacros: true, calories: 380, protein: 30, fat: 9, carbs: 45
                 },
                 {
-                    id: 'b2',
-                    category: 'Breakfast',
+                    id: 'b2', catId: 'breakfast', icon: '🫐',
                     title: 'Icelandic Skyr Bowl',
-                    desc: '200g of plain Skyr (a thick, high-protein yogurt alternative). Top with a handful of berries and 15g of walnuts or chia seeds. No cooking required.',
-                    calories: 280,
-                    protein: 24,
-                    fat: 10,
-                    carbs: 20,
-                    hasFullMacros: true,
-                    icon: '🫐'
+                    desc: '200g of plain Skyr topped with a handful of berries and 15g of walnuts or chia seeds. Extremely thick and satiating.',
+                    hasMacros: true, calories: 280, protein: 24, fat: 10, carbs: 20
                 },
                 {
-                    id: 'b3',
-                    category: 'Breakfast',
+                    id: 'b3', catId: 'breakfast', icon: '🥚',
                     title: 'Spinach & Feta Egg Muffins',
-                    desc: 'Whisk eggs with chopped spinach, diced tomatoes, and crumbled feta. Pour into a muffin tin and bake. Store in the fridge and microwave 2-3 in the morning.',
-                    calories: 250,
-                    protein: 20,
-                    fat: 15,
-                    carbs: 5,
-                    hasFullMacros: true,
-                    icon: '🥚'
+                    desc: 'Whisk eggs with spinach, tomatoes, and a little feta. Pour into a muffin tin and bake. Store in the fridge and microwave 2-3 in the morning.',
+                    hasMacros: true, calories: 250, protein: 20, fat: 15, carbs: 5
                 },
+                // Lunch
                 {
-                    id: 'l1',
-                    category: 'Vegetarian Lunch',
+                    id: 'l1', catId: 'lunch', icon: '🥗',
                     title: 'Chickpea & Quinoa Tabbouleh',
-                    desc: 'Cooked quinoa mixed with 1 can of chickpeas, diced cucumber, cherry tomatoes, parsley, a lemon-olive oil dressing, and 50g of crumbled feta.',
-                    calories: 400,
-                    protein: 16,
-                    fat: 14,
-                    carbs: 48,
-                    hasFullMacros: true,
-                    icon: '🥗'
+                    desc: 'Cooked quinoa mixed with a can of chickpeas, cucumber, cherry tomatoes, parsley, and a lemon-olive oil dressing. Add 50g crumbled feta.',
+                    hasMacros: true, calories: 400, protein: 16, fat: 14, carbs: 48
                 },
                 {
-                    id: 'l2',
-                    category: 'Vegetarian Lunch',
+                    id: 'l2', catId: 'lunch', icon: '🍲',
                     title: 'Halloumi & Lentil Bowls',
-                    desc: 'Cooked brown lentils, Sunday pre-roasted vegetables (zucchini, bell peppers, onions), and sturdy greens (like shredded cabbage). Top with cold, pre-seared slices of Halloumi cheese.',
-                    hasFullMacros: false,
-                    icon: '🍲'
+                    desc: 'Cooked brown lentils, Sunday pre-roasted vegetables, and sturdy greens. Top with cold, pre-seared slices of Halloumi cheese.',
+                    hasMacros: false, note: 'High Fiber / Flexible Macros based on Halloumi portion.'
                 },
+                // Snack
                 {
-                    id: 's1',
-                    category: '6 PM Hunger Buster',
+                    id: 's1', catId: 'snack', icon: '🫛',
                     title: 'Edamame & Almonds',
-                    desc: '1 cup of steamed edamame pods (microwave from frozen in 2 mins) plus 10 raw almonds.',
-                    calories: 220,
-                    protein: 19,
-                    fat: 12,
-                    carbs: 12,
-                    hasFullMacros: true,
-                    icon: '🫛'
+                    desc: '1 cup of steamed edamame pods (buy frozen, microwave in 2 mins) + 10 almonds.',
+                    hasMacros: true, calories: 220, protein: 19, fat: 12, carbs: 12
                 },
                 {
-                    id: 's2',
-                    category: '6 PM Hunger Buster',
+                    id: 's2', catId: 'snack', icon: '🥤',
                     title: 'Quick Protein Shake',
-                    desc: '1 scoop of whey or plant-based protein powder mixed with water or unsweetened almond milk in a shaker bottle. Perfect for commuting.',
-                    calories: 130,
-                    protein: 25,
-                    fat: 2,
-                    carbs: 3,
-                    hasFullMacros: true,
-                    icon: '🥤'
+                    desc: '1 scoop of whey or plant-based protein powder mixed with water or unsweetened almond milk. Extremely fast for the post-office rush.',
+                    hasMacros: true, calories: 130, protein: 25, fat: 2, carbs: 3
                 },
                 {
-                    id: 's3',
-                    category: '6 PM Hunger Buster',
+                    id: 's3', catId: 'snack', icon: '🌶️',
                     title: 'Roasted Spiced Chickpeas',
-                    desc: 'Toss a can of drained chickpeas with 1 tsp olive oil, smoked paprika, cumin, and salt. Roast at 200°C for 25 minutes until crunchy.',
-                    calories: 210,
-                    protein: 10,
-                    fat: 7,
-                    carbs: 28,
-                    hasFullMacros: true,
-                    icon: '🌶️'
+                    desc: 'Toss canned chickpeas with 1 tsp olive oil, smoked paprika, cumin, salt. Roast at 200°C for 25 mins. Keep in a baggie.',
+                    hasMacros: true, calories: 210, protein: 10, fat: 7, carbs: 28
                 },
+                // Dinner
                 {
-                    id: 'd1',
-                    category: 'Dinner',
+                    id: 'd1', catId: 'dinner', icon: '🧆',
                     title: 'Turkey & Spinach Meatballs',
-                    desc: 'Lean ground turkey mixed with minced garlic, dried oregano, salt, pepper, and finely chopped spinach. Serve over a generous portion of your pre-roasted vegetables.',
-                    calories: 420,
-                    protein: 35,
-                    fat: 18,
-                    carbs: 28,
-                    hasFullMacros: true,
-                    icon: '🧆'
+                    desc: 'Lean ground turkey mixed with garlic, oregano, and spinach. Bake a large batch. Serve with zucchini noodles or whole-wheat pasta and marinara.',
+                    hasMacros: true, calories: 420, protein: 35, fat: 18, carbs: 28
                 },
                 {
-                    id: 'd2',
-                    category: 'Dinner',
-                    title: 'Lemon-Herb Salmon',
-                    desc: 'Place fresh salmon fillets, asparagus, and diced sweet potatoes on a baking sheet. Roast with olive oil, lemon, and dill for 15 mins.',
-                    calories: 450,
-                    protein: 32,
-                    fat: 22,
-                    carbs: 25,
-                    hasFullMacros: true,
-                    icon: '🐟'
+                    id: 'd2', catId: 'dinner', icon: '🐟',
+                    title: 'Sheet Pan Lemon-Herb Salmon',
+                    desc: 'Place salmon fillets, asparagus, and diced sweet potatoes on a baking sheet. Roast with olive oil, lemon, and dill.',
+                    hasMacros: true, calories: 450, protein: 32, fat: 22, carbs: 25
                 },
                 {
-                    id: 'd3',
-                    category: 'Dinner',
+                    id: 'd3', catId: 'dinner', icon: '🍗',
                     title: 'Greek Chicken Bowls',
                     desc: 'Pre-grilled chicken breast slices, served over a bed of greens, Kalamata olives, tomatoes, and 2 tbsp of Tzatziki sauce.',
-                    calories: 380,
-                    protein: 40,
-                    fat: 16,
-                    carbs: 12,
-                    hasFullMacros: true,
-                    icon: '🍗'
+                    hasMacros: true, calories: 380, protein: 40, fat: 16, carbs: 12
                 },
+                // Flex
                 {
-                    id: 'w1',
-                    category: 'Weekend Flex',
+                    id: 'f1', catId: 'flex', icon: '🥙',
                     title: 'Tuna Salad Pita',
-                    desc: 'A tuna salad using Skyr or Greek yogurt instead of mayo, stuffed into a whole-wheat pita with leftover roasted veggies.',
-                    hasFullMacros: false,
-                    icon: '🥙'
+                    desc: 'A quick weekend option. Tuna salad using Greek yogurt instead of mayo, stuffed into a whole-wheat pita with greens.',
+                    hasMacros: false, note: 'Weekend Flex Option'
                 },
                 {
-                    id: 'w2',
-                    category: 'Weekend Flex',
+                    id: 'f2', catId: 'flex', icon: '🍕',
                     title: 'The Structured Cheat Meal',
-                    desc: 'Pick one single meal on the weekend where you don\'t track macros. Enjoy pizza, a burger, or your favorite comfort food until satisfied—but don\'t let it turn into a cheat DAY.',
-                    hasFullMacros: false,
-                    icon: '🍕'
+                    desc: 'Pick one meal where you don\'t track macros. Enjoy the pizza, burger, or dessert until satisfied, then return immediately to the plan.',
+                    hasMacros: false, note: 'Mental Sanity Preserver'
                 }
             ],
-            categories: ['Breakfast', 'Vegetarian Lunch', '6 PM Hunger Buster', 'Dinner', 'Weekend Flex']
+            groceryCategories: [
+                {
+                    title: "🥩 Proteins", color: "red",
+                    items: ["Lean ground turkey", "Salmon fillets", "Chicken breast", "Eggs (1-2 dozen)", "Vanilla Protein Powder", "Canned Tuna"]
+                },
+                {
+                    title: "🧀 Dairy & Cheese", color: "blue",
+                    items: ["Plain Skyr", "Feta cheese block", "Halloumi cheese", "Tzatziki sauce", "Unsweetened almond milk"]
+                },
+                {
+                    title: "🥬 Vegetables", color: "green",
+                    items: ["Baby spinach", "Cherry tomatoes", "Cucumbers", "Red onions", "Bell peppers", "Asparagus", "Sweet potatoes", "Zucchini/Zoodles", "Mixed greens"]
+                },
+                {
+                    title: "🌾 Legumes & Grains", color: "amber",
+                    items: ["Rolled oats", "Quinoa", "Brown lentils", "Canned chickpeas (3-4 cans)", "Whole-wheat pita", "Whole-wheat pasta (optional)"]
+                },
+                {
+                    title: "🫛 Frozen & Snacks", color: "teal",
+                    items: ["Frozen edamame pods", "Frozen mixed berries", "Walnuts", "Almonds", "Chia seeds", "Kalamata olives"]
+                },
+                {
+                    title: "🫒 Pantry & Oils", color: "slate",
+                    items: ["Extra Virgin Olive Oil", "Marinara sauce"]
+                },
+                {
+                    title: "🌿 Herbs & Spices", color: "emerald",
+                    items: ["Fresh parsley", "Fresh dill", "Garlic", "Lemon (for juice)", "Dried oregano", "Smoked paprika", "Cumin"]
+                }
+            ]
         };
 
         const app = {
@@ -717,188 +368,200 @@
 
             init() {
                 this.renderMealList();
+                this.renderGroceryList();
             },
 
-            // Navigation handler
             switchTab(tabId) {
-                // Hide all views
-                document.getElementById('view-strategy').classList.add('hidden');
-                document.getElementById('view-strategy').classList.remove('block');
-                document.getElementById('view-library').classList.add('hidden');
-                document.getElementById('view-library').classList.remove('block');
-                document.getElementById('view-protocol').classList.add('hidden');
-                document.getElementById('view-protocol').classList.remove('block');
-                document.getElementById('view-grocery').classList.add('hidden');
-                document.getElementById('view-grocery').classList.remove('block');
+                // Hide all tabs
+                document.querySelectorAll('.tab-content').forEach(tab => {
+                    tab.classList.add('hidden');
+                });
                 
-                // Reset nav buttons
-                document.querySelectorAll('.nav-btn').forEach(btn => {
+                // Remove active class from buttons
+                document.querySelectorAll('.tab-btn').forEach(btn => {
                     btn.classList.remove('active');
                 });
 
-                // Show selected view
-                document.getElementById(`view-${tabId}`).classList.remove('hidden');
-                document.getElementById(`view-${tabId}`).classList.add('block');
+                // Show target tab
+                document.getElementById(tabId).classList.remove('hidden');
                 document.getElementById(`tab-${tabId}`).classList.add('active');
             },
 
-            // Render the sidebar list of meals
             renderMealList() {
                 const container = document.getElementById('meal-list-container');
-                container.innerHTML = '';
+                let html = '';
 
-                appData.categories.forEach(category => {
-                    const categoryMeals = appData.meals.filter(m => m.category === category);
-                    if (categoryMeals.length === 0) return;
-
+                appData.categories.forEach(cat => {
                     // Category Header
-                    const catHeader = document.createElement('div');
-                    catHeader.className = 'bg-slate-50 px-5 py-3 font-bold text-slate-500 text-xs uppercase tracking-wider sticky top-0 border-b border-t border-slate-200 z-10 first:border-t-0';
-                    catHeader.innerText = category;
-                    container.appendChild(catHeader);
+                    html += `
+                        <div class="px-3 py-2 mt-2 mb-1">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">${cat.title}</span>
+                        </div>
+                    `;
 
-                    // Meal Buttons
-                    categoryMeals.forEach(meal => {
-                        const btn = document.createElement('button');
-                        btn.className = 'meal-btn w-full text-left px-5 py-4 border-b border-slate-100 hover:bg-slate-50 transition-colors flex items-center justify-between group';
-                        btn.onclick = () => this.selectMeal(meal.id, btn);
-                        btn.innerHTML = `
-                            <div class="flex items-center">
-                                <span class="text-xl mr-3 opacity-80 group-hover:opacity-100 transition-opacity">${meal.icon}</span>
-                                <span class="text-slate-700 font-medium">${meal.title}</span>
-                            </div>
-                            <span class="text-slate-300 group-hover:text-teal-500 transition-colors">→</span>
+                    // Meals in category
+                    const catMeals = appData.meals.filter(m => m.catId === cat.id);
+                    catMeals.forEach(meal => {
+                        html += `
+                            <button onclick="app.selectMeal('${meal.id}', this)" class="meal-btn w-full text-left px-4 py-3 rounded-lg mb-1 hover:bg-slate-50 transition-colors flex items-center gap-3 border-l-4 border-transparent">
+                                <span class="text-2xl">${meal.icon}</span>
+                                <div>
+                                    <div class="font-medium text-slate-800">${meal.title}</div>
+                                    <div class="text-xs text-slate-500">${meal.hasMacros ? `${meal.calories} kcal | ${meal.protein}g P` : 'Flexible'}</div>
+                                </div>
+                            </button>
                         `;
-                        container.appendChild(btn);
                     });
                 });
+
+                container.innerHTML = html;
             },
 
-            // Handle meal selection and data population
             selectMeal(mealId, btnElement) {
-                // UI State
-                document.querySelectorAll('.meal-btn').forEach(b => b.classList.remove('active'));
+                // Update active state in sidebar
+                document.querySelectorAll('.meal-btn').forEach(btn => btn.classList.remove('active'));
                 btnElement.classList.add('active');
 
+                // Find meal data
                 const meal = appData.meals.find(m => m.id === mealId);
+                const container = document.getElementById('meal-detail-container');
+
+                let macroHtml = '';
                 
-                // Toggle empty vs content states
-                document.getElementById('meal-detail-empty').classList.add('hidden');
-                document.getElementById('meal-detail-content').classList.remove('hidden');
-                document.getElementById('meal-detail-content').classList.add('flex');
-
-                // Auto-scroll to details on mobile devices
-                if (window.innerWidth < 1024) {
-                    setTimeout(() => {
-                        document.getElementById('detail-panel-container').scrollIntoView({ behavior: 'smooth' });
-                    }, 50);
-                }
-
-                // Populate text
-                document.getElementById('detail-category').innerText = meal.category;
-                document.getElementById('detail-title').innerText = meal.icon + ' ' + meal.title;
-                document.getElementById('detail-desc').innerText = meal.desc;
-
-                // Handle Macros Container
-                const textContainer = document.getElementById('macro-text-container');
-                textContainer.innerHTML = '';
-
-                if (meal.calories) {
-                    textContainer.innerHTML += `
-                        <div class="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200">
-                            <span class="text-slate-600 font-medium">Estimated Calories</span>
-                            <span class="text-xl font-bold text-slate-800">${meal.calories}</span>
-                        </div>
-                    `;
-                }
-
-                if (meal.hasFullMacros) {
-                    textContainer.innerHTML += `
-                        <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200 shadow-sm border-l-4 border-l-[#0d9488]">
-                            <span class="text-slate-600 font-medium">Protein</span>
-                            <span class="text-lg font-bold text-[#0d9488]">${meal.protein}g</span>
-                        </div>
-                        <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200 shadow-sm border-l-4 border-l-[#d97706]">
-                            <span class="text-slate-600 font-medium">Fats</span>
-                            <span class="text-lg font-bold text-[#d97706]">${meal.fat}g</span>
-                        </div>
-                        <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200 shadow-sm border-l-4 border-l-[#475569]">
-                            <span class="text-slate-600 font-medium">Carbs</span>
-                            <span class="text-lg font-bold text-[#475569]">${meal.carbs}g</span>
-                        </div>
-                    `;
-                    this.drawChart(meal);
-                } else {
-                    if(!meal.calories && !meal.protein) {
-                         textContainer.innerHTML = `
-                            <div class="bg-slate-50 p-5 rounded-xl text-slate-500 text-sm italic border border-slate-200 text-center">
-                                Specific macronutrients are not strictly tracked for this flexible option. Focus on healthy portions and intuitive eating.
+                if (meal.hasMacros) {
+                    macroHtml = `
+                        <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200">
+                            <h4 class="font-bold text-slate-800 mb-4 flex items-center justify-between">
+                                Nutritional Breakdown
+                                <span class="text-sm font-normal text-slate-500">Est. Total: <span class="font-bold text-slate-800">${meal.calories} kcal</span></span>
+                            </h4>
+                            
+                            <div class="flex flex-col md:flex-row items-center gap-8">
+                                <div class="w-48 h-48 relative">
+                                    <canvas id="macroChart"></canvas>
+                                </div>
+                                
+                                <div class="flex-grow space-y-4 w-full">
+                                    <!-- Protein -->
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span class="font-medium text-brand-teal">Protein</span>
+                                            <span class="font-bold">${meal.protein}g</span>
+                                        </div>
+                                        <div class="w-full bg-slate-200 rounded-full h-2">
+                                            <div class="bg-brand-teal h-2 rounded-full" style="width: ${(meal.protein * 4 / meal.calories * 100)}%"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Fat -->
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span class="font-medium text-amber-500">Fat</span>
+                                            <span class="font-bold">${meal.fat}g</span>
+                                        </div>
+                                        <div class="w-full bg-slate-200 rounded-full h-2">
+                                            <div class="bg-amber-500 h-2 rounded-full" style="width: ${(meal.fat * 9 / meal.calories * 100)}%"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Carbs -->
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span class="font-medium text-slate-500">Carbs</span>
+                                            <span class="font-bold">${meal.carbs}g</span>
+                                        </div>
+                                        <div class="w-full bg-slate-200 rounded-full h-2">
+                                            <div class="bg-slate-500 h-2 rounded-full" style="width: ${(meal.carbs * 4 / meal.calories * 100)}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        `;
-                    }
-                    this.clearChart();
+                        </div>
+                    `;
+                } else {
+                    macroHtml = `
+                        <div class="bg-amber-50 rounded-2xl p-6 border border-amber-100 text-center">
+                            <span class="text-3xl block mb-2">⚖️</span>
+                            <h4 class="font-bold text-amber-800 mb-1">Intuitive Eating Zone</h4>
+                            <p class="text-amber-700 text-sm">${meal.note}</p>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = `
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden fade-in">
+                        <div class="p-8 border-b border-slate-100">
+                            <div class="flex items-center gap-4 mb-4">
+                                <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-4xl">
+                                    ${meal.icon}
+                                </div>
+                                <div>
+                                    <h2 class="text-2xl font-bold text-slate-800">${meal.title}</h2>
+                                    <span class="inline-block px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-medium mt-1">
+                                        ${appData.categories.find(c => c.id === meal.catId).title}
+                                    </span>
+                                </div>
+                            </div>
+                            <p class="text-slate-600 text-lg leading-relaxed">${meal.desc}</p>
+                        </div>
+                        <div class="p-8">
+                            ${macroHtml}
+                        </div>
+                    </div>
+                `;
+
+                if (meal.hasMacros) {
+                    this.drawChart(meal);
+                }
+                
+                // On mobile, scroll to details
+                if (window.innerWidth < 1024) {
+                    container.scrollIntoView({ behavior: 'smooth' });
                 }
             },
 
-            // Draw Chart.js visualization
             drawChart(meal) {
-                const ctx = document.getElementById('macroChart').getContext('2d');
                 if (this.chartInstance) {
                     this.chartInstance.destroy();
                 }
 
-                // Calculate percentages for tooltip
-                const totalMacros = meal.protein + meal.fat + meal.carbs;
+                const ctx = document.getElementById('macroChart').getContext('2d');
+                
+                // Calculate calories from each macro for accurate distribution visualization
+                const proteinCals = meal.protein * 4;
+                const fatCals = meal.fat * 9;
+                const carbCals = meal.carbs * 4;
 
                 this.chartInstance = new Chart(ctx, {
                     type: 'doughnut',
                     data: {
-                        labels: ['Protein', 'Fats', 'Carbs'],
+                        labels: ['Protein', 'Fat', 'Carbs'],
                         datasets: [{
-                            data: [meal.protein, meal.fat, meal.carbs],
+                            data: [proteinCals, fatCals, carbCals],
                             backgroundColor: [
-                                '#0d9488', // Teal 600
-                                '#d97706', // Amber 600
-                                '#94a3b8'  // Slate 400
+                                '#0d9488', // Teal
+                                '#f59e0b', // Amber
+                                '#64748b'  // Slate
                             ],
                             borderWidth: 0,
-                            hoverOffset: 6
+                            hoverOffset: 4
                         }]
                     },
                     options: {
+                        cutout: '75%',
                         responsive: true,
                         maintainAspectRatio: false,
-                        cutout: '70%',
-                        animation: {
-                            animateScale: true,
-                            animateRotate: true
-                        },
                         plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    usePointStyle: true,
-                                    padding: 20,
-                                    font: { family: 'system-ui', size: 13, weight: '500' },
-                                    color: '#475569'
-                                }
-                            },
+                            legend: { display: false },
                             tooltip: {
-                                backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                                titleFont: { size: 14 },
-                                bodyFont: { size: 14 },
-                                padding: 12,
-                                cornerRadius: 8,
                                 callbacks: {
                                     label: function(context) {
                                         let label = context.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        if (context.parsed !== null) {
-                                            const percentage = Math.round((context.parsed / totalMacros) * 100);
-                                            label += context.parsed + 'g (' + percentage + '%)';
-                                        }
+                                        if (label) { label += ': '; }
+                                        
+                                        // Show grams in tooltip
+                                        if(context.label === 'Protein') label += meal.protein + 'g';
+                                        if(context.label === 'Fat') label += meal.fat + 'g';
+                                        if(context.label === 'Carbs') label += meal.carbs + 'g';
+                                        
                                         return label;
                                     }
                                 }
@@ -908,40 +571,77 @@
                 });
             },
 
-            // Remove chart if no macros
-            clearChart() {
-                const ctx = document.getElementById('macroChart').getContext('2d');
-                if (this.chartInstance) {
-                    this.chartInstance.destroy();
-                    this.chartInstance = null;
+            toggleStrike(checkbox) {
+                const label = checkbox.closest('label');
+                if (checkbox.checked) {
+                    label.classList.add('completed', 'bg-slate-50');
+                } else {
+                    label.classList.remove('completed', 'bg-slate-50');
                 }
             },
+            
+            renderGroceryList() {
+                const container = document.getElementById('grocery-container');
+                let html = '';
+                
+                const bgColors = {
+                    red: 'bg-rose-50 border-rose-100 text-rose-800',
+                    blue: 'bg-blue-50 border-blue-100 text-blue-800',
+                    green: 'bg-green-50 border-green-100 text-green-800',
+                    amber: 'bg-amber-50 border-amber-100 text-amber-800',
+                    teal: 'bg-teal-50 border-teal-100 text-teal-800',
+                    slate: 'bg-slate-50 border-slate-200 text-slate-800',
+                    emerald: 'bg-emerald-50 border-emerald-100 text-emerald-800'
+                };
 
-            // Sunday prep checklist toggle
-            toggleStrike(checkboxElement) {
-                const parentLabel = checkboxElement.closest('label');
-                if (checkboxElement.checked) {
-                    parentLabel.classList.add('completed');
-                } else {
-                    parentLabel.classList.remove('completed');
-                }
+                appData.groceryCategories.forEach((cat, index) => {
+                    const colorClass = bgColors[cat.color];
+                    
+                    let itemsHtml = '';
+                    cat.items.forEach((item, i) => {
+                        const uniqueId = `groc-${index}-${i}`;
+                        itemsHtml += `
+                            <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors group">
+                                <input type="checkbox" id="${uniqueId}" class="mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal grocery-checkbox" onchange="app.toggleStrike(this)">
+                                <span class="text-slate-700 text-sm group-hover:text-slate-900">${item}</span>
+                            </label>
+                        `;
+                    });
+
+                    html += `
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div class="p-3 border-b ${colorClass} font-bold text-sm">
+                                ${cat.title}
+                            </div>
+                            <div class="p-3 space-y-1">
+                                ${itemsHtml}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            },
+            
+            resetProtocol() {
+                document.querySelectorAll('.protocol-checkbox').forEach(cb => {
+                    cb.checked = false;
+                    app.toggleStrike(cb);
+                });
             },
 
-            // Grocery list item toggle
-            toggleGrocery(checkboxElement) {
-                const parentLabel = checkboxElement.closest('label');
-                if (checkboxElement.checked) {
-                    parentLabel.classList.add('checked');
-                } else {
-                    parentLabel.classList.remove('checked');
-                }
+            resetGroceries() {
+                document.querySelectorAll('.grocery-checkbox').forEach(cb => {
+                    cb.checked = false;
+                    app.toggleStrike(cb);
+                });
             }
         };
 
-        // Initialize application on load
-        window.onload = () => {
+        // Initialize App on load
+        window.addEventListener('DOMContentLoaded', () => {
             app.init();
-        };
+        });
     </script>
 </body>
 </html>
