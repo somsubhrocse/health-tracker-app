@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Mediterranean Batch-Prep Plan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 350px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 250px;
+            max-height: 300px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+        .nav-btn.active {
+            background-color: #0d9488; /* Tailwind Teal 600 */
+            color: #ffffff;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .meal-btn.active {
+            background-color: #f1f5f9;
+            border-left-width: 4px;
+            border-left-color: #0d9488;
+            font-weight: 600;
+        }
+        .prep-item {
+            transition: all 0.2s ease;
+        }
+        .prep-item.completed {
+            opacity: 0.4;
+            text-decoration: line-through;
+            background-color: #f8fafc;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <!-- Chosen Palette: Clean slate grays (#f8fafc to #334155) for base readability, Mediterranean Teal (#0d9488) for primary branding/actions, and warm Amber/Olive accents for food vitality. -->
+    <!-- Application Structure Plan: The SPA uses a 3-tab layout optimized for a general audience. 
+         1) "The Strategy" introduces the core philosophy (protein focus, 6 PM snack, batch prep) so anyone can grasp the 'why' behind the plan.
+         2) "Meal Library" acts as a digital cookbook and macro calculator, allowing users to browse recipes by time of day and visualize nutritional balance.
+         3) "Sunday Protocol" converts static prep instructions into an actionable, cross-off checklist to guide users through their 2-hour weekend cooking session. -->
+    <!-- Visualization & Content Choices: 
+         - Core Principles -> The Strategy Tab -> HTML/CSS Icon Cards -> Interaction: Hover lifts -> Justification: Breaks down the methodology into easily digestible rules.
+         - Macronutrient Breakdowns -> Meal Library -> Chart.js Doughnut Charts -> Interaction: Hover tooltips -> Justification: Visually proves the "high protein, balanced fat/carb" promise of each meal without overwhelming the user with raw numbers.
+         - Prep Steps -> Sunday Protocol -> HTML Checkboxes + JS logic -> Interaction: Click to strike-through -> Justification: Transforms a static reading experience into a practical kitchen tool.
+         - Library/Method: Vanilla JS for routing and state, Chart.js (Canvas) for macros, Tailwind for responsive layout. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. Relying strictly on Unicode emojis, Tailwind styling, and Chart.js Canvas. -->
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm sticky top-0 z-20 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row justify-between items-center h-auto sm:h-16 py-3 sm:py-0">
+                <div class="flex items-center space-x-2 mb-3 sm:mb-0">
+                    <span class="text-2xl">🌿</span>
+                    <span class="font-bold text-xl text-slate-800 tracking-tight">The <span class="text-teal-600">Medi</span>Prep Plan</span>
+                </div>
+                <div class="flex items-center space-x-2 overflow-x-auto w-full sm:w-auto pb-2 sm:pb-0 hide-scrollbar justify-start sm:justify-center px-1">
+                    <button onclick="app.switchTab('strategy')" id="tab-strategy" class="nav-btn active px-4 py-2 rounded-full text-sm font-medium text-slate-600 hover:bg-teal-50 transition-all whitespace-nowrap">The Strategy</button>
+                    <button onclick="app.switchTab('library')" id="tab-library" class="nav-btn px-4 py-2 rounded-full text-sm font-medium text-slate-600 hover:bg-teal-50 transition-all whitespace-nowrap">Meal Library</button>
+                    <button onclick="app.switchTab('protocol')" id="tab-protocol" class="nav-btn px-4 py-2 rounded-full text-sm font-medium text-slate-600 hover:bg-teal-50 transition-all whitespace-nowrap">Sunday Protocol</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+        <!-- TAB 1: The Strategy -->
+        <div id="view-strategy" class="block space-y-8 fade-in">
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-8 opacity-10 text-8xl pointer-events-none">🍋</div>
+                <div class="relative z-10 max-w-3xl">
+                    <h1 class="text-3xl md:text-4xl font-bold text-slate-800 mb-4">A sustainable approach to fat loss.</h1>
+                    <p class="text-slate-600 text-lg leading-relaxed">
+                        This plan is designed for busy professionals who want to drop body fat and preserve muscle, but don't have the time to cook every single meal. By combining the heart-healthy principles of the Mediterranean diet with a strategic batch-prep routine, you can eat beautifully without the daily stress.
+                    </p>
+                </div>
+            </div>
+
+            <h2 class="text-2xl font-bold text-slate-800 px-2 mt-10 mb-4">The Core Pillars</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Pillar 1 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                    <div class="h-12 w-12 bg-teal-100 text-teal-600 rounded-xl flex items-center justify-center text-2xl mb-4">🥩</div>
+                    <h3 class="font-bold text-lg text-slate-800 mb-2">High Protein Focus</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        To preserve muscle mass while in a calorie deficit, every meal is anchored by a strong protein source—ranging from Skyr and eggs to lean turkey, salmon, and plant-based legumes.
+                    </p>
+                </div>
+
+                <!-- Pillar 2 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                    <div class="h-12 w-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center text-2xl mb-4">⏱️</div>
+                    <h3 class="font-bold text-lg text-slate-800 mb-2">The 6:00 PM Hunger Buster</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        The post-work hunger spike is where most diets fail. We actively combat this by scheduling a mandatory, high-protein snack right as the workday ends to stabilize blood sugar before dinner.
+                    </p>
+                </div>
+
+                <!-- Pillar 3 -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
+                    <div class="h-12 w-12 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center text-2xl mb-4">🥗</div>
+                    <h3 class="font-bold text-lg text-slate-800 mb-2">Vegetarian Workdays</h3>
+                    <p class="text-slate-600 text-sm leading-relaxed">
+                        To boost fiber intake and ensure lunches are easy to pack and store safely at the office, all weekday lunches are 100% vegetarian, relying on robust ingredients like quinoa and chickpeas.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: Meal Library -->
+        <div id="view-library" class="hidden space-y-6 fade-in">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Interactive Meal Library</h2>
+                <p class="text-slate-600">
+                    Browse the menu below. Select any meal to reveal its preparation instructions and view a detailed macronutrient breakdown to ensure you are hitting your dietary targets.
+                </p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-6">
+                <!-- Sidebar Menu -->
+                <div class="w-full lg:w-1/3 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden max-h-80 lg:max-h-none lg:h-[600px] overflow-y-auto hide-scrollbar">
+                    <div id="meal-list-container" class="flex flex-col pb-4">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Detail Panel -->
+                <div id="detail-panel-container" class="w-full lg:w-2/3 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 flex flex-col min-h-[400px] lg:min-h-[600px] scroll-mt-20">
+                    
+                    <!-- Empty State -->
+                    <div id="meal-detail-empty" class="flex-grow flex flex-col items-center justify-center text-slate-400 py-10">
+                        <span class="text-6xl mb-4">🍽️</span>
+                        <p class="text-lg">Select a meal from the library to view details</p>
+                    </div>
+                    
+                    <!-- Content State -->
+                    <div id="meal-detail-content" class="hidden flex-col h-full fade-in">
+                        <div class="border-b border-slate-100 pb-4 mb-6">
+                            <span id="detail-category" class="text-xs font-bold uppercase tracking-wider text-teal-600 bg-teal-50 px-3 py-1 rounded-full"></span>
+                            <h3 id="detail-title" class="text-3xl font-bold text-slate-800 mt-4 mb-1"></h3>
+                        </div>
+                        
+                        <div class="mb-8 bg-slate-50 p-5 rounded-xl border border-slate-200">
+                            <h4 class="text-sm font-bold text-slate-700 mb-2 flex items-center"><span class="mr-2">🧑‍🍳</span> Preparation & Ingredients</h4>
+                            <p id="detail-desc" class="text-slate-600 leading-relaxed"></p>
+                        </div>
+
+                        <div class="flex-grow flex flex-col md:flex-row items-center justify-between gap-8 bg-white p-4">
+                            <div class="w-full md:w-1/2">
+                                <h4 class="text-sm font-bold text-slate-700 mb-4 flex items-center"><span class="mr-2">📊</span> Nutritional Profile</h4>
+                                <div id="macro-text-container" class="space-y-3">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+                            <div class="w-full md:w-1/2 flex justify-center items-center">
+                                <div class="chart-container">
+                                    <canvas id="macroChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: Sunday Protocol -->
+        <div id="view-protocol" class="hidden space-y-6 fade-in">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">The 2-Hour Sunday Prep Protocol</h2>
+                <p class="text-slate-600">
+                    The secret to this diet is execution. Run these three phases concurrently on a Sunday afternoon to prepare all your weekday lunches, breakfasts, and dinner components. Use the checklist as you cook.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Column 1: Oven -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-rose-50 px-6 py-4 border-b border-rose-100 flex items-center justify-between">
+                        <h3 class="font-bold text-rose-900 text-lg flex items-center"><span class="mr-2">🔥</span> Phase 1: The Oven</h3>
+                        <span class="text-rose-700 font-mono text-xs bg-rose-100 px-2 py-1 rounded-md font-bold">200°C</span>
+                    </div>
+                    <div class="p-4 space-y-2">
+                        <label class="prep-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
+                            <input type="checkbox" class="mt-1 w-5 h-5 text-rose-600 rounded border-slate-300 focus:ring-rose-500 transition-colors" onclick="app.toggleStrike(this)">
+                            <span class="text-slate-600 text-sm leading-snug"><strong class="text-slate-800">The Roasting Veggies:</strong> Chop a massive batch of zucchini, bell peppers, red onions, and eggplant. Toss with olive oil and oregano. Put on the bottom rack for 30 minutes.</span>
+                        </label>
+                        <label class="prep-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
+                            <input type="checkbox" class="mt-1 w-5 h-5 text-rose-600 rounded border-slate-300 focus:ring-rose-500 transition-colors" onclick="app.toggleStrike(this)">
+                            <span class="text-slate-600 text-sm leading-snug"><strong class="text-slate-800">The Turkey Meatballs:</strong> Mix ground turkey with very finely chopped spinach, garlic, and salt. Roll into balls and bake on the top rack for 18-20 minutes.</span>
+                        </label>
+                        <label class="prep-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
+                            <input type="checkbox" class="mt-1 w-5 h-5 text-rose-600 rounded border-slate-300 focus:ring-rose-500 transition-colors" onclick="app.toggleStrike(this)">
+                            <span class="text-slate-600 text-sm leading-snug"><strong class="text-slate-800">The Egg Muffins:</strong> Lower the oven heat to 180°C after the meat comes out, and bake the egg/feta mixture in a tin for 20 minutes.</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Column 2: Stove -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-amber-50 px-6 py-4 border-b border-amber-100 flex items-center justify-between">
+                        <h3 class="font-bold text-amber-900 text-lg flex items-center"><span class="mr-2">♨️</span> Phase 2: The Stove</h3>
+                    </div>
+                    <div class="p-4 space-y-2">
+                        <label class="prep-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
+                            <input type="checkbox" class="mt-1 w-5 h-5 text-amber-500 rounded border-slate-300 focus:ring-amber-500 transition-colors" onclick="app.toggleStrike(this)">
+                            <span class="text-slate-600 text-sm leading-snug"><strong class="text-slate-800">Boil Quinoa:</strong> Cook enough quinoa for the first three days of lunches. Set aside to cool.</span>
+                        </label>
+                        <label class="prep-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
+                            <input type="checkbox" class="mt-1 w-5 h-5 text-amber-500 rounded border-slate-300 focus:ring-amber-500 transition-colors" onclick="app.toggleStrike(this)">
+                            <span class="text-slate-600 text-sm leading-snug"><strong class="text-slate-800">Simmer Soup:</strong> Get a large pot simmering with diced carrots, celery, onions, canned tomatoes, broth, and dry brown lentils. Cook for 40 minutes.</span>
+                        </label>
+                        <label class="prep-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
+                            <input type="checkbox" class="mt-1 w-5 h-5 text-amber-500 rounded border-slate-300 focus:ring-amber-500 transition-colors" onclick="app.toggleStrike(this)">
+                            <span class="text-slate-600 text-sm leading-snug"><strong class="text-slate-800">Sear Halloumi:</strong> Slice your Halloumi block and pan-fry the slices for 2 minutes per side until golden. Set aside.</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Column 3: Assemble -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-teal-50 px-6 py-4 border-b border-teal-100 flex items-center justify-between">
+                        <h3 class="font-bold text-teal-900 text-lg flex items-center"><span class="mr-2">🍱</span> Phase 3: Assemble</h3>
+                    </div>
+                    <div class="p-4 space-y-2">
+                        <label class="prep-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
+                            <input type="checkbox" class="mt-1 w-5 h-5 text-teal-600 rounded border-slate-300 focus:ring-teal-500 transition-colors" onclick="app.toggleStrike(this)">
+                            <span class="text-slate-600 text-sm leading-snug"><strong class="text-slate-800">Chop Fresh Produce:</strong> Dice raw cucumbers, cherry tomatoes, and fresh parsley for salads.</span>
+                        </label>
+                        <label class="prep-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
+                            <input type="checkbox" class="mt-1 w-5 h-5 text-teal-600 rounded border-slate-300 focus:ring-teal-500 transition-colors" onclick="app.toggleStrike(this)">
+                            <span class="text-slate-600 text-sm leading-snug"><strong class="text-slate-800">Portion Tabbouleh:</strong> Mix cooked quinoa with raw veggies, chickpeas, and feta. Portion into 3 lunchboxes (Mon/Tue/Wed).</span>
+                        </label>
+                        <label class="prep-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
+                            <input type="checkbox" class="mt-1 w-5 h-5 text-teal-600 rounded border-slate-300 focus:ring-teal-500 transition-colors" onclick="app.toggleStrike(this)">
+                            <span class="text-slate-600 text-sm leading-snug"><strong class="text-slate-800">Pack Lentil Bowls:</strong> Add sturdy greens, cooked lentils, roasted vegetables, and seared Halloumi into 2 lunchboxes (Thu/Fri). Dressing on the side.</span>
+                        </label>
+                        <label class="prep-item flex items-start space-x-3 cursor-pointer p-3 hover:bg-slate-50 rounded-lg border border-transparent hover:border-slate-100">
+                            <input type="checkbox" class="mt-1 w-5 h-5 text-teal-600 rounded border-slate-300 focus:ring-teal-500 transition-colors" onclick="app.toggleStrike(this)">
+                            <span class="text-slate-600 text-sm leading-snug"><strong class="text-slate-800">Store Proteins:</strong> Place cooled meatballs and soup into large airtight containers in the fridge.</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Database of meals extracted and generalized from the source report
+        const appData = {
+            meals: [
+                {
+                    id: 'b1',
+                    category: 'Breakfast',
+                    title: 'Overnight Protein Oats',
+                    desc: 'Mix 50g rolled oats, 1 scoop vanilla protein powder, 1 tbsp chia seeds, and 120ml unsweetened almond milk in a jar. Leave in the fridge overnight. Top with berries in the morning.',
+                    calories: 380,
+                    protein: 30,
+                    fat: 9,
+                    carbs: 45,
+                    hasFullMacros: true,
+                    icon: '🥣'
+                },
+                {
+                    id: 'b2',
+                    category: 'Breakfast',
+                    title: 'Icelandic Skyr Bowl',
+                    desc: '200g of plain Skyr (a thick, high-protein yogurt alternative). Top with a handful of berries and 15g of walnuts or chia seeds. No cooking required.',
+                    calories: 280,
+                    protein: 24,
+                    fat: 10,
+                    carbs: 20,
+                    hasFullMacros: true,
+                    icon: '🫐'
+                },
+                {
+                    id: 'b3',
+                    category: 'Breakfast',
+                    title: 'Spinach & Feta Egg Muffins',
+                    desc: 'Whisk eggs with chopped spinach, diced tomatoes, and crumbled feta. Pour into a muffin tin and bake. Store in the fridge and microwave 2-3 in the morning.',
+                    calories: 250,
+                    protein: 20,
+                    fat: 15,
+                    carbs: 5,
+                    hasFullMacros: true,
+                    icon: '🥚'
+                },
+                {
+                    id: 'l1',
+                    category: 'Vegetarian Lunch',
+                    title: 'Chickpea & Quinoa Tabbouleh',
+                    desc: 'Cooked quinoa mixed with 1 can of chickpeas, diced cucumber, cherry tomatoes, parsley, a lemon-olive oil dressing, and 50g of crumbled feta.',
+                    calories: 400,
+                    protein: 16,
+                    fat: 14,
+                    carbs: 48,
+                    hasFullMacros: true,
+                    icon: '🥗'
+                },
+                {
+                    id: 'l2',
+                    category: 'Vegetarian Lunch',
+                    title: 'Halloumi & Lentil Bowls',
+                    desc: 'Cooked brown lentils, Sunday pre-roasted vegetables (zucchini, bell peppers, onions), and sturdy greens (like shredded cabbage). Top with cold, pre-seared slices of Halloumi cheese.',
+                    hasFullMacros: false,
+                    icon: '🍲'
+                },
+                {
+                    id: 's1',
+                    category: '6 PM Hunger Buster',
+                    title: 'Edamame & Almonds',
+                    desc: '1 cup of steamed edamame pods (microwave from frozen in 2 mins) plus 10 raw almonds.',
+                    calories: 220,
+                    protein: 19,
+                    fat: 12,
+                    carbs: 12,
+                    hasFullMacros: true,
+                    icon: '🫛'
+                },
+                {
+                    id: 's2',
+                    category: '6 PM Hunger Buster',
+                    title: 'Quick Protein Shake',
+                    desc: '1 scoop of whey or plant-based protein powder mixed with water or unsweetened almond milk in a shaker bottle. Perfect for commuting.',
+                    calories: 130,
+                    protein: 25,
+                    fat: 2,
+                    carbs: 3,
+                    hasFullMacros: true,
+                    icon: '🥤'
+                },
+                {
+                    id: 's3',
+                    category: '6 PM Hunger Buster',
+                    title: 'Roasted Spiced Chickpeas',
+                    desc: 'Toss a can of drained chickpeas with 1 tsp olive oil, smoked paprika, cumin, and salt. Roast at 200°C for 25 minutes until crunchy.',
+                    calories: 210,
+                    protein: 10,
+                    fat: 7,
+                    carbs: 28,
+                    hasFullMacros: true,
+                    icon: '🌶️'
+                },
+                {
+                    id: 'd1',
+                    category: 'Dinner',
+                    title: 'Turkey & Spinach Meatballs',
+                    desc: 'Lean ground turkey mixed with minced garlic, dried oregano, salt, pepper, and finely chopped spinach. Serve over a generous portion of your pre-roasted vegetables.',
+                    calories: 420,
+                    protein: 35,
+                    fat: 18,
+                    carbs: 28,
+                    hasFullMacros: true,
+                    icon: '🧆'
+                },
+                {
+                    id: 'd2',
+                    category: 'Dinner',
+                    title: 'Lemon-Herb Salmon',
+                    desc: 'Place fresh salmon fillets, asparagus, and diced sweet potatoes on a baking sheet. Roast with olive oil, lemon, and dill for 15 mins.',
+                    calories: 450,
+                    protein: 32,
+                    fat: 22,
+                    carbs: 25,
+                    hasFullMacros: true,
+                    icon: '🐟'
+                },
+                {
+                    id: 'd3',
+                    category: 'Dinner',
+                    title: 'Greek Chicken Bowls',
+                    desc: 'Pre-grilled chicken breast slices, served over a bed of greens, Kalamata olives, tomatoes, and 2 tbsp of Tzatziki sauce.',
+                    calories: 380,
+                    protein: 40,
+                    fat: 16,
+                    carbs: 12,
+                    hasFullMacros: true,
+                    icon: '🍗'
+                },
+                {
+                    id: 'w1',
+                    category: 'Weekend Flex',
+                    title: 'Tuna Salad Pita',
+                    desc: 'A tuna salad using Skyr or Greek yogurt instead of mayo, stuffed into a whole-wheat pita with leftover roasted veggies.',
+                    hasFullMacros: false,
+                    icon: '🥙'
+                },
+                {
+                    id: 'w2',
+                    category: 'Weekend Flex',
+                    title: 'The Structured Cheat Meal',
+                    desc: 'Pick one single meal on the weekend where you don\'t track macros. Enjoy pizza, a burger, or your favorite comfort food until satisfied—but don\'t let it turn into a cheat DAY.',
+                    hasFullMacros: false,
+                    icon: '🍕'
+                }
+            ],
+            categories: ['Breakfast', 'Vegetarian Lunch', '6 PM Hunger Buster', 'Dinner', 'Weekend Flex']
+        };
+
+        const app = {
+            chartInstance: null,
+
+            init() {
+                this.renderMealList();
+            },
+
+            // Navigation handler
+            switchTab(tabId) {
+                // Hide all views
+                document.getElementById('view-strategy').classList.add('hidden');
+                document.getElementById('view-strategy').classList.remove('block');
+                document.getElementById('view-library').classList.add('hidden');
+                document.getElementById('view-library').classList.remove('block');
+                document.getElementById('view-protocol').classList.add('hidden');
+                document.getElementById('view-protocol').classList.remove('block');
+                
+                // Reset nav buttons
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+
+                // Show selected view
+                document.getElementById(`view-${tabId}`).classList.remove('hidden');
+                document.getElementById(`view-${tabId}`).classList.add('block');
+                document.getElementById(`tab-${tabId}`).classList.add('active');
+            },
+
+            // Render the sidebar list of meals
+            renderMealList() {
+                const container = document.getElementById('meal-list-container');
+                container.innerHTML = '';
+
+                appData.categories.forEach(category => {
+                    const categoryMeals = appData.meals.filter(m => m.category === category);
+                    if (categoryMeals.length === 0) return;
+
+                    // Category Header
+                    const catHeader = document.createElement('div');
+                    catHeader.className = 'bg-slate-50 px-5 py-3 font-bold text-slate-500 text-xs uppercase tracking-wider sticky top-0 border-b border-t border-slate-200 z-10 first:border-t-0';
+                    catHeader.innerText = category;
+                    container.appendChild(catHeader);
+
+                    // Meal Buttons
+                    categoryMeals.forEach(meal => {
+                        const btn = document.createElement('button');
+                        btn.className = 'meal-btn w-full text-left px-5 py-4 border-b border-slate-100 hover:bg-slate-50 transition-colors flex items-center justify-between group';
+                        btn.onclick = () => this.selectMeal(meal.id, btn);
+                        btn.innerHTML = `
+                            <div class="flex items-center">
+                                <span class="text-xl mr-3 opacity-80 group-hover:opacity-100 transition-opacity">${meal.icon}</span>
+                                <span class="text-slate-700 font-medium">${meal.title}</span>
+                            </div>
+                            <span class="text-slate-300 group-hover:text-teal-500 transition-colors">→</span>
+                        `;
+                        container.appendChild(btn);
+                    });
+                });
+            },
+
+            // Handle meal selection and data population
+            selectMeal(mealId, btnElement) {
+                // UI State
+                document.querySelectorAll('.meal-btn').forEach(b => b.classList.remove('active'));
+                btnElement.classList.add('active');
+
+                const meal = appData.meals.find(m => m.id === mealId);
+                
+                // Toggle empty vs content states
+                document.getElementById('meal-detail-empty').classList.add('hidden');
+                document.getElementById('meal-detail-content').classList.remove('hidden');
+                document.getElementById('meal-detail-content').classList.add('flex');
+
+                // Auto-scroll to details on mobile devices
+                if (window.innerWidth < 1024) {
+                    setTimeout(() => {
+                        document.getElementById('detail-panel-container').scrollIntoView({ behavior: 'smooth' });
+                    }, 50);
+                }
+
+                // Populate text
+                document.getElementById('detail-category').innerText = meal.category;
+                document.getElementById('detail-title').innerText = meal.icon + ' ' + meal.title;
+                document.getElementById('detail-desc').innerText = meal.desc;
+
+                // Handle Macros Container
+                const textContainer = document.getElementById('macro-text-container');
+                textContainer.innerHTML = '';
+
+                if (meal.calories) {
+                    textContainer.innerHTML += `
+                        <div class="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200">
+                            <span class="text-slate-600 font-medium">Estimated Calories</span>
+                            <span class="text-xl font-bold text-slate-800">${meal.calories}</span>
+                        </div>
+                    `;
+                }
+
+                if (meal.hasFullMacros) {
+                    textContainer.innerHTML += `
+                        <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200 shadow-sm border-l-4 border-l-[#0d9488]">
+                            <span class="text-slate-600 font-medium">Protein</span>
+                            <span class="text-lg font-bold text-[#0d9488]">${meal.protein}g</span>
+                        </div>
+                        <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200 shadow-sm border-l-4 border-l-[#d97706]">
+                            <span class="text-slate-600 font-medium">Fats</span>
+                            <span class="text-lg font-bold text-[#d97706]">${meal.fat}g</span>
+                        </div>
+                        <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200 shadow-sm border-l-4 border-l-[#475569]">
+                            <span class="text-slate-600 font-medium">Carbs</span>
+                            <span class="text-lg font-bold text-[#475569]">${meal.carbs}g</span>
+                        </div>
+                    `;
+                    this.drawChart(meal);
+                } else {
+                    if(!meal.calories && !meal.protein) {
+                         textContainer.innerHTML = `
+                            <div class="bg-slate-50 p-5 rounded-xl text-slate-500 text-sm italic border border-slate-200 text-center">
+                                Specific macronutrients are not strictly tracked for this flexible option. Focus on healthy portions and intuitive eating.
+                            </div>
+                        `;
+                    }
+                    this.clearChart();
+                }
+            },
+
+            // Draw Chart.js visualization
+            drawChart(meal) {
+                const ctx = document.getElementById('macroChart').getContext('2d');
+                if (this.chartInstance) {
+                    this.chartInstance.destroy();
+                }
+
+                // Calculate percentages for tooltip
+                const totalMacros = meal.protein + meal.fat + meal.carbs;
+
+                this.chartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Protein', 'Fats', 'Carbs'],
+                        datasets: [{
+                            data: [meal.protein, meal.fat, meal.carbs],
+                            backgroundColor: [
+                                '#0d9488', // Teal 600
+                                '#d97706', // Amber 600
+                                '#94a3b8'  // Slate 400
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        animation: {
+                            animateScale: true,
+                            animateRotate: true
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 20,
+                                    font: { family: 'system-ui', size: 13, weight: '500' },
+                                    color: '#475569'
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                titleFont: { size: 14 },
+                                bodyFont: { size: 14 },
+                                padding: 12,
+                                cornerRadius: 8,
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed !== null) {
+                                            const percentage = Math.round((context.parsed / totalMacros) * 100);
+                                            label += context.parsed + 'g (' + percentage + '%)';
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            },
+
+            // Remove chart if no macros
+            clearChart() {
+                const ctx = document.getElementById('macroChart').getContext('2d');
+                if (this.chartInstance) {
+                    this.chartInstance.destroy();
+                    this.chartInstance = null;
+                }
+            },
+
+            // Sunday prep checklist toggle
+            toggleStrike(checkboxElement) {
+                const parentLabel = checkboxElement.closest('label');
+                if (checkboxElement.checked) {
+                    parentLabel.classList.add('completed');
+                } else {
+                    parentLabel.classList.remove('completed');
+                }
+            }
+        };
+
+        // Initialize application on load
+        window.onload = () => {
+            app.init();
+        };
+    </script>
+</body>
+</html>
