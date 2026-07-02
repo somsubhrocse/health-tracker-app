@@ -148,11 +148,19 @@
                         </label>
                         <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
                             <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
+                            <span class="text-slate-700">Season chicken breasts and spiced chickpeas. Place on baking sheets.</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
+                            <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
                             <span class="text-slate-700">Whisk Egg Muffins mixture. Pour into greased tin.</span>
                         </label>
                         <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
                             <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
-                            <span class="text-slate-700">Bake Meatballs and Muffins together for 20 mins.</span>
+                            <span class="text-slate-700">Toss zucchini, eggplant, and peppers with oil & herbs. Place on a baking sheet.</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
+                            <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
+                            <span class="text-slate-700">Bake Meatballs, Muffins, Veggies, Chicken, and Chickpeas for 20-25 mins.</span>
                         </label>
                     </div>
                 </div>
@@ -170,7 +178,15 @@
                         </label>
                         <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
                             <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
-                            <span class="text-slate-700">Dice onions, cucumbers, tomatoes, and bell peppers.</span>
+                            <span class="text-slate-700">Start Brown Lentils on a separate burner (20-25 mins simmer).</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
+                            <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
+                            <span class="text-slate-700">Chop veggies for roasting (zucchini, eggplant, peppers, onions).</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
+                            <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
+                            <span class="text-slate-700">Dice raw veggies for salads (cucumbers, tomatoes, red onions).</span>
                         </label>
                         <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
                             <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
@@ -188,7 +204,7 @@
                     <div class="p-4 space-y-3">
                         <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
                             <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
-                            <span class="text-slate-700">Mix cooked Quinoa with chickpeas & veg for Tabbouleh.</span>
+                            <span class="text-slate-700">Mix cooked Quinoa with fresh veg & some chickpeas for Tabbouleh.</span>
                         </label>
                         <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
                             <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
@@ -200,7 +216,7 @@
                         </label>
                         <label class="flex items-start gap-3 p-2 hover:bg-slate-50 rounded cursor-pointer transition-colors">
                             <input type="checkbox" class="protocol-checkbox mt-1 w-4 h-4 text-brand-teal rounded border-slate-300 focus:ring-brand-teal" onchange="app.toggleStrike(this)">
-                            <span class="text-slate-700">Store cooled Meatballs and Muffins in Tupperware.</span>
+                            <span class="text-slate-700">Store cooled Meatballs, Muffins, Veggies, Chicken, Lentils, and Spiced Chickpeas.</span>
                         </label>
                     </div>
                 </div>
@@ -244,7 +260,8 @@
                 { id: 'lunch', title: 'Vegetarian Lunches' },
                 { id: 'snack', title: '6 PM Hunger Busters' },
                 { id: 'dinner', title: 'Weeknight Dinners' },
-                { id: 'flex', title: 'Weekend Flex Options' }
+                { id: 'flex', title: 'Weekend Flex Options' },
+                { id: 'staples', title: 'Meal-Prep Staples' }
             ],
             meals: [
                 // Breakfast
@@ -329,6 +346,13 @@
                     title: 'The Structured Cheat Meal',
                     desc: 'Pick one meal where you don\'t track macros. Enjoy the pizza, burger, or dessert until satisfied, then return immediately to the plan.',
                     hasMacros: false, note: 'Mental Sanity Preserver'
+                },
+                // Staples
+                {
+                    id: 'st1', catId: 'staples', icon: '🍆',
+                    title: 'Pre-Roasted Mediterranean Veggies',
+                    desc: 'A versatile batch-prep base. Zucchini, eggplant, bell peppers, broccoli, and red onions tossed with olive oil, oregano, salt, and garlic powder, then roasted. Serve in Halloumi bowls or alongside dinner proteins.',
+                    hasMacros: true, calories: 120, protein: 3, fat: 7, carbs: 12
                 }
             ],
             groceryCategories: [
@@ -342,7 +366,7 @@
                 },
                 {
                     title: "🥬 Vegetables", color: "green",
-                    items: ["Baby spinach", "Cherry tomatoes", "Cucumbers", "Red onions", "Bell peppers", "Asparagus", "Sweet potatoes", "Zucchini/Zoodles", "Mixed greens"]
+                    items: ["Baby spinach", "Cherry tomatoes", "Cucumbers", "Red onions", "Bell peppers", "Asparagus", "Sweet potatoes", "Zucchini/Zoodles", "Mixed greens", "Eggplant", "Broccoli"]
                 },
                 {
                     title: "🌾 Legumes & Grains", color: "amber",
